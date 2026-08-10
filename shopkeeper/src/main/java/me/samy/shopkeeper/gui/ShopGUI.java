@@ -1,4 +1,4 @@
-```java
+```text
 package me.samy.shopkeeper.gui;
 
 import me.samy.shopkeeper.ShopKeeperPlugin;
@@ -233,4 +233,3 @@ public class ShopGUI {
         }
     }
 }
-```
