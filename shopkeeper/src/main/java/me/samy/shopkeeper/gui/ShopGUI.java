@@ -19,221 +19,221 @@ import org.bukkit.inventory.ItemStack;
 
 public class ShopGUI {
 
-```
-private final Shop shop;
-private final ShopKeeperPlugin plugin;
-private Inventory inv;
+    private final Shop shop;
+    private final ShopKeeperPlugin plugin;
+    private Inventory inv;
 
-public ShopGUI(
-        ShopKeeperPlugin plugin,
-        Shop shop
-) {
-    this.plugin = plugin;
-    this.shop = shop;
-    build();
-}
-
-public static void register(
-        ShopKeeperPlugin plugin
-) {
-    // Listeners are registered when the GUI is opened.
-}
-
-private void build() {
-
-    int rows = Math.max(
-            1,
-            Math.min(
-                    6,
-                    shop.getGui().rows
-            )
-    );
-
-    inv = Bukkit.createInventory(
-            null,
-            rows * 9,
-            ChatColor.translateAlternateColorCodes(
-                    '&',
-                    shop.getGui().title
-            )
-    );
-
-    for (int i = 0;
-         i < inv.getSize();
-         i++) {
-
-        inv.setItem(
-                i,
-                null
-        );
+    public ShopGUI(
+            ShopKeeperPlugin plugin,
+            Shop shop
+    ) {
+        this.plugin = plugin;
+        this.shop = shop;
+        build();
     }
 
-    int slot = 0;
-
-    for (ShopItem si :
-            shop.getItems()) {
-
-        if (slot >= inv.getSize()) {
-            break;
-        }
-
-        ItemStack display =
-                si.getItem().clone();
-
-        ItemUtil.addShopLore(
-                display,
-                si
-        );
-
-        inv.setItem(
-                slot,
-                display
-        );
-
-        slot++;
+    public static void register(
+            ShopKeeperPlugin plugin
+    ) {
+        // Listeners are registered when the GUI is opened.
     }
-}
 
-public void open(Player p) {
+    private void build() {
 
-    p.openInventory(inv);
+        int rows = Math.max(
+                1,
+                Math.min(
+                        6,
+                        shop.getGui().rows
+                )
+        );
 
-    p.getServer()
-            .getPluginManager()
-            .registerEvents(
-                    new InventoryClickHandler(),
-                    plugin
+        inv = Bukkit.createInventory(
+                null,
+                rows * 9,
+                ChatColor.translateAlternateColorCodes(
+                        '&',
+                        shop.getGui().title
+                )
+        );
+
+        for (int i = 0;
+             i < inv.getSize();
+             i++) {
+
+            inv.setItem(
+                    i,
+                    null
             );
-}
-
-private class InventoryClickHandler
-        implements Listener {
-
-    @EventHandler
-    public void onInventoryClose(
-            InventoryCloseEvent e
-    ) {
-
-        if (e.getInventory() != inv) {
-            return;
         }
 
-        HandlerList.unregisterAll(this);
-    }
-
-    @EventHandler
-    public void onInventoryClick(
-            InventoryClickEvent e
-    ) {
-
-        if (e.getInventory() != inv) {
-            return;
-        }
-
-        e.setCancelled(true);
-
-        if (!(e.getWhoClicked()
-                instanceof Player)) {
-
-            return;
-        }
-
-        Player p =
-                (Player) e.getWhoClicked();
-
-        int slot =
-                e.getRawSlot();
-
-        if (slot < 0 ||
-                slot >= inv.getSize()) {
-
-            return;
-        }
-
-        ItemStack clicked =
-                inv.getItem(slot);
-
-        if (clicked == null ||
-                clicked.getType().isAir()) {
-
-            return;
-        }
-
-        ShopItem matched = null;
+        int slot = 0;
 
         for (ShopItem si :
                 shop.getItems()) {
 
-            if (ItemUtil.isSimilar(
-                    clicked,
-                    si.getItem()
-            )) {
-
-                matched = si;
+            if (slot >= inv.getSize()) {
                 break;
             }
+
+            ItemStack display =
+                    si.getItem().clone();
+
+            ItemUtil.addShopLore(
+                    display,
+                    si
+            );
+
+            inv.setItem(
+                    slot,
+                    display
+            );
+
+            slot++;
+        }
+    }
+
+    public void open(Player p) {
+
+        p.openInventory(inv);
+
+        p.getServer()
+                .getPluginManager()
+                .registerEvents(
+                        new InventoryClickHandler(),
+                        plugin
+                );
+    }
+
+    private class InventoryClickHandler
+            implements Listener {
+
+        @EventHandler
+        public void onInventoryClose(
+                InventoryCloseEvent e
+        ) {
+
+            if (e.getInventory() != inv) {
+                return;
+            }
+
+            HandlerList.unregisterAll(this);
         }
 
-        if (matched == null) {
-            return;
-        }
+        @EventHandler
+        public void onInventoryClick(
+                InventoryClickEvent e
+        ) {
 
-        ClickType clickType =
-                e.getClick();
+            if (e.getInventory() != inv) {
+                return;
+            }
 
-        if (clickType ==
-                ClickType.NUMBER_KEY) {
+            e.setCancelled(true);
 
-            return;
-        }
+            if (!(e.getWhoClicked()
+                    instanceof Player)) {
 
-        int qty = 1;
+                return;
+            }
 
-        if (clickType ==
-                ClickType.SHIFT_LEFT ||
-            clickType ==
-                ClickType.SHIFT_RIGHT) {
+            Player p =
+                    (Player) e.getWhoClicked();
 
-            qty = 16;
-        }
+            int slot =
+                    e.getRawSlot();
 
-        if (clickType ==
-                ClickType.RIGHT) {
+            if (slot < 0 ||
+                    slot >= inv.getSize()) {
 
-            if (!matched.isSellEnabled()) {
+                return;
+            }
+
+            ItemStack clicked =
+                    inv.getItem(slot);
+
+            if (clicked == null ||
+                    clicked.getType().isAir()) {
+
+                return;
+            }
+
+            ShopItem matched = null;
+
+            for (ShopItem si :
+                    shop.getItems()) {
+
+                if (ItemUtil.isSimilar(
+                        clicked,
+                        si.getItem()
+                )) {
+
+                    matched = si;
+                    break;
+                }
+            }
+
+            if (matched == null) {
+                return;
+            }
+
+            ClickType clickType =
+                    e.getClick();
+
+            if (clickType ==
+                    ClickType.NUMBER_KEY) {
+
+                return;
+            }
+
+            int qty = 1;
+
+            if (clickType ==
+                    ClickType.SHIFT_LEFT ||
+                clickType ==
+                    ClickType.SHIFT_RIGHT) {
+
+                qty = 16;
+            }
+
+            if (clickType ==
+                    ClickType.RIGHT) {
+
+                if (!matched.isSellEnabled()) {
+
+                    p.sendMessage(
+                            ChatColor.RED
+                                    + "Selling disabled for this item."
+                    );
+
+                    return;
+                }
+
+                new SellGUI(
+                        plugin,
+                        shop,
+                        matched
+                ).open(p);
+
+                return;
+            }
+
+            if (!matched.isBuyEnabled()) {
 
                 p.sendMessage(
-                        ChatColor.RED +
-                                "Selling disabled for this item."
+                        ChatColor.RED
+                                + "Buying disabled for this item."
                 );
 
                 return;
             }
 
-            new SellGUI(
+            new PurchaseGUI(
                     plugin,
                     shop,
-                    matched
+                    matched,
+                    qty
             ).open(p);
-
-            return;
-               }
-
-        if (!matched.isBuyEnabled()) {
-
-            p.sendMessage(
-                    ChatColor.RED +
-                            "Buying disabled for this item."
-            );
-
-            return;
         }
-
-               new PurchaseGUI(
-                plugin,
-                shop,
-                matched,
-                qty
-        ).open(p);
     }
 }
