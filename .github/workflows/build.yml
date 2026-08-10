@@ -17,16 +17,16 @@ jobs:
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: '21'
+          distribution: 'temurin'
           cache: maven
 
-      - name: Build Plugin
-        working-directory: ShopKeeperPlugin
-        run: mvn -B clean package
+      - name: Build plugin
+        working-directory: ./ShopKeeperPlugin
+        run: mvn clean package
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
-          name: ShopKeeper
+          name: ShopKeeperPlugin
           path: ShopKeeperPlugin/target/*.jar
