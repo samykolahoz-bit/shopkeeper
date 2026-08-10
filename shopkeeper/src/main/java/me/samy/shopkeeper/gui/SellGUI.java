@@ -1,4 +1,3 @@
-```text
 package me.samy.shopkeeper.gui;
 
 import me.samy.shopkeeper.ShopKeeperPlugin;
@@ -21,248 +20,352 @@ import org.bukkit.inventory.ItemStack;
 
 public class SellGUI {
 
-    private final Shop shop;
-    private final ShopItem item;
-    private final ShopKeeperPlugin plugin;
-    private Inventory inv;
+```
+private final Shop shop;
+private final ShopItem item;
+private final ShopKeeperPlugin plugin;
+private Inventory inv;
 
-    public SellGUI(ShopKeeperPlugin plugin, Shop shop, ShopItem item) {
-        this.plugin = plugin;
-        this.shop = shop;
-        this.item = item;
-        build();
+public SellGUI(
+        ShopKeeperPlugin plugin,
+        Shop shop,
+        ShopItem item
+) {
+    this.plugin = plugin;
+    this.shop = shop;
+    this.item = item;
+    build();
+}
+
+private void build() {
+
+    inv = Bukkit.createInventory(
+            null,
+            9,
+            ChatColor.GRAY
+                    + "Sell: "
+                    + ItemUtil.getDisplayName(item.getItem())
+    );
+
+    inv.setItem(
+            3,
+            ItemUtil.makeControlItem(
+                    Material.PAPER,
+                    ChatColor.GOLD
+                            + "Sell All matching"
+            )
+    );
+
+    inv.setItem(
+            4,
+            ItemUtil.makeControlItem(
+                    Material.EMERALD,
+                    ChatColor.GREEN
+                            + "Sell"
+            )
+    );
+
+    inv.setItem(
+            5,
+            ItemUtil.makeControlItem(
+                    Material.BARRIER,
+                    ChatColor.RED
+                            + "Cancel"
+            )
+    );
+}
+
+public void open(Player p) {
+
+    p.openInventory(inv);
+
+    p.getServer()
+            .getPluginManager()
+            .registerEvents(
+                    new SellHandler(),
+                    plugin
+            );
+}
+
+private class SellHandler implements Listener {
+
+    @EventHandler
+    public void onInventoryClose(
+            InventoryCloseEvent e
+    ) {
+
+        if (e.getInventory() != inv) {
+            return;
+        }
+
+        HandlerList.unregisterAll(this);
     }
 
-    private void build() {
-        inv = Bukkit.createInventory(
-                null,
-                9,
-                ChatColor.GRAY + "Sell: " + ItemUtil.getDisplayName(item.getItem())
-        );
+    @EventHandler
+    public void onClick(
+            InventoryClickEvent e
+    ) {
 
-        inv.setItem(
-                3,
-                ItemUtil.makeControlItem(
-                        Material.PAPER,
-                        ChatColor.GOLD + "Sell All matching"
-                )
-        );
+        if (e.getInventory() != inv) {
+            return;
+        }
 
-        inv.setItem(
-                4,
-                ItemUtil.makeControlItem(
-                        Material.EMERALD,
-                        ChatColor.GREEN + "Sell"
-                )
-        );
+        e.setCancelled(true);
 
-        inv.setItem(
-                5,
-                ItemUtil.makeControlItem(
-                        Material.BARRIER,
-                        ChatColor.RED + "Cancel"
-                )
+        if (!(e.getWhoClicked()
+                instanceof Player)) {
+            return;
+        }
+
+        Player p =
+                (Player) e.getWhoClicked();
+
+        ItemStack clicked =
+                e.getCurrentItem();
+
+        if (clicked == null) {
+            return;
+        }
+
+        String name =
+                ItemUtil.getDisplayName(clicked);
+
+        if (name.contains("Sell All")) {
+
+            attemptSellAll(p);
+
+        } else if (name.contains("Sell")) {
+
+            attemptSell(p);
+
+        } else if (name.contains("Cancel")) {
+
+            p.closeInventory();
+        }
+    }
+
+    private void attemptSellAll(Player p) {
+
+        int count = 0;
+
+        for (ItemStack is :
+                p.getInventory().getContents()) {
+
+            if (is == null ||
+                    is.getType().isAir()) {
+                continue;
+            }
+
+            if (ItemUtil.isSimilar(
+                    is,
+                    item.getItem()
+            )) {
+
+                count += is.getAmount();
+            }
+        }
+
+        if (count <= 0) {
+
+            p.sendMessage(
+                    ChatColor.RED
+                            + "You have none of that item."
+            );
+
+            return;
+        }
+
+        performSell(
+                p,
+                count
         );
     }
 
-    public void open(Player p) {
-        p.openInventory(inv);
+    private void attemptSell(Player p) {
 
-        p.getServer()
-                .getPluginManager()
-                .registerEvents(new SellHandler(), plugin);
+        ItemStack hand =
+                p.getInventory()
+                        .getItemInMainHand();
+
+        if (hand == null ||
+                hand.getType().isAir()) {
+
+            p.sendMessage(
+                    ChatColor.RED
+                            + "Hold the item to sell in your hand."
+            );
+
+            return;
+        }
+
+        if (!ItemUtil.isSimilar(
+                hand,
+                item.getItem()
+        )) {
+
+            p.sendMessage(
+                    ChatColor.RED
+                            + "Item in hand does not match the shop item."
+            );
+
+            return;
+        }
+
+        performSell(
+                p,
+                hand.getAmount()
+        );
     }
 
-    private class SellHandler implements Listener {
+    private void performSell(
+            Player p,
+            int amount
+    ) {
 
-        @EventHandler
-        public void onInventoryClose(InventoryCloseEvent e) {
-            if (e.getInventory() != inv) {
-                return;
-            }
+        if (!plugin.getEconomyManager()
+                .isEnabled()) {
 
-            HandlerList.unregisterAll(this);
+            p.sendMessage(
+                    ChatColor.RED
+                            + "Economy not available."
+            );
+
+            return;
         }
 
-        @EventHandler
-        public void onClick(InventoryClickEvent e) {
-            if (e.getInventory() != inv) {
-                return;
-            }
+        if (item.getSellPrice() < 0) {
 
-            e.setCancelled(true);
+            p.sendMessage(
+                    ChatColor.RED
+                            + "Item has no sell price."
+            );
 
-            if (!(e.getWhoClicked() instanceof Player)) {
-                return;
-            }
-
-            Player p = (Player) e.getWhoClicked();
-            ItemStack clicked = e.getCurrentItem();
-
-            if (clicked == null) {
-                return;
-            }
-
-            String name = ItemUtil.getDisplayName(clicked);
-
-            if (name.contains("Sell All")) {
-                attemptSellAll(p);
-            } else if (name.contains("Sell")) {
-                attemptSell(p);
-            } else if (name.contains("Cancel")) {
-                p.closeInventory();
-            }
+            return;
         }
 
-        private void attemptSellAll(Player p) {
-            int count = 0;
-
-            for (ItemStack is : p.getInventory().getContents()) {
-
-                if (is == null) {
-                    continue;
-                }
-
-                if (ItemUtil.isSimilar(is, item.getItem())) {
-                    count += is.getAmount();
-                }
-            }
-
-            if (count <= 0) {
-                p.sendMessage(
-                        ChatColor.RED + "You have none of that item."
-                );
-                return;
-            }
-
-            performSell(p, count);
+        if (amount <= 0) {
+            return;
         }
 
-        private void attemptSell(Player p) {
+        int removed = 0;
 
-            ItemStack hand =
-                    p.getInventory().getItemInMainHand();
+        for (int i = 0;
+             i < p.getInventory().getSize();
+             i++) {
 
-            if (hand == null || hand.getType().isAir()) {
-                p.sendMessage(
-                        ChatColor.RED +
-                        "Hold the item to sell in your hand."
-                );
-                return;
+            ItemStack is =
+                    p.getInventory().getItem(i);
+
+            if (is == null ||
+                    is.getType().isAir()) {
+                continue;
             }
 
-            if (!ItemUtil.isSimilar(hand, item.getItem())) {
-                p.sendMessage(
-                        ChatColor.RED +
-                        "Item in hand does not match the shop item."
-                );
-                return;
+            if (!ItemUtil.isSimilar(
+                    is,
+                    item.getItem()
+            )) {
+                continue;
             }
 
-            performSell(p, hand.getAmount());
-        }
+            int remaining =
+                    amount - removed;
 
-        private void performSell(Player p, int amount) {
-
-            if (!plugin.getEconomyManager().isEnabled()) {
-                p.sendMessage(
-                        ChatColor.RED +
-                        "Economy not available."
-                );
-                return;
-            }
-
-            if (item.getSellPrice() < 0) {
-                p.sendMessage(
-                        ChatColor.RED +
-                        "Item has no sell price."
-                );
-                return;
-            }
-
-            double total =
-                    item.getSellPrice() * amount;
-
-            int removed = 0;
-
-            for (int i = 0;
-                 i < p.getInventory().getSize();
-                 i++) {
-
-                ItemStack is =
-                        p.getInventory().getItem(i);
-
-                if (is == null) {
-                    continue;
-                }
-
-                if (ItemUtil.isSimilar(is, item.getItem())) {
-
-                    int take = Math.min(
+            int take =
+                    Math.min(
                             is.getAmount(),
-                            amount - removed
+                            remaining
                     );
 
-                    is.setAmount(
-                            is.getAmount() - take
-                    );
+            is.setAmount(
+                    is.getAmount() - take
+            );
 
-                    if (is.getAmount() <= 0) {
-                        p.getInventory().setItem(i, null);
-                    }
+            if (is.getAmount() <= 0) {
 
-                    removed += take;
-
-                    if (removed >= amount) {
-                        break;
-                    }
-                }
+                p.getInventory()
+                        .setItem(i, null);
             }
 
-            if (removed <= 0) {
-                p.sendMessage(
-                        ChatColor.RED +
-                        "You don't have that item."
-                );
-                return;
+            removed += take;
+
+            if (removed >= amount) {
+                break;
             }
+        }
 
-            final int finalRemoved = removed;
+        if (removed <= 0) {
 
-            plugin.getServer()
-                    .getScheduler()
-                    .runTask(plugin, () -> {
+            p.sendMessage(
+                    ChatColor.RED
+                            + "You don't have that item."
+            );
 
-                        EconomyManager eco =
-                                plugin.getEconomyManager();
+            return;
+        }
 
-                        eco.getEconomy()
-                                .depositPlayer(p, total);
+        final int finalRemoved =
+                removed;
 
-                        if (item.getStock() >= 0) {
+        final double total =
+                item.getSellPrice()
+                        * finalRemoved;
 
-                            item.setStock(
-                                    item.getStock() + finalRemoved
+        plugin.getServer()
+                .getScheduler()
+                .runTask(
+                        plugin,
+                        () -> {
+
+                            EconomyManager eco =
+                                    plugin.getEconomyManager();
+
+                            if (!eco.isEnabled()) {
+
+                                p.sendMessage(
+                                        ChatColor.RED
+                                                + "Economy not available."
+                                );
+
+                                return;
+                            }
+
+                            eco.getEconomy()
+                                    .depositPlayer(
+                                            p,
+                                            total
+                                    );
+
+                            if (item.getStock() >= 0) {
+
+                                item.setStock(
+                                        item.getStock()
+                                                + finalRemoved
+                                );
+
+                                plugin.getShopManager()
+                                        .saveShopAsync(
+                                                shop
+                                        );
+                            }
+
+                            p.sendMessage(
+                                    ChatColor.GREEN
+                                            + "[Shop] You sold "
+                                            + finalRemoved
+                                            + "x "
+                                            + ItemUtil.getDisplayName(
+                                                    item.getItem()
+                                            )
+                                            + " for $"
+                                            + total
                             );
 
-                            plugin.getShopManager()
-                                    .saveShopAsync(shop);
+                            p.closeInventory();
                         }
-
-                        p.sendMessage(
-                                ChatColor.GREEN +
-                                "[Shop] You sold " +
-                                finalRemoved +
-                                "x " +
-                                ItemUtil.getDisplayName(
-                                        item.getItem()
-                                ) +
-                                " for $" +
-                                total
-                        );
-
-                        p.closeInventory();
-                    });
-        }
+                );
     }
+}
+```
+
 }
