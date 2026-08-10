@@ -346,25 +346,20 @@ private class SellHandler implements Listener {
                                         .saveShopAsync(
                                                 shop
                                         );
-                            }
+                            }                        p.sendMessage(
+                                ChatColor.GREEN
+                                        + "[Shop] You sold "
+                                        + finalRemoved
+                                        + "x "
+                                        + ItemUtil.getDisplayName(
+                                                item.getItem()
+                                        )
+                                        + " for $"
+                                        + total
+                        );
 
-                            p.sendMessage(
-                                    ChatColor.GREEN
-                                            + "[Shop] You sold "
-                                            + finalRemoved
-                                            + "x "
-                                            + ItemUtil.getDisplayName(
-                                                    item.getItem()
-                                            )
-                                            + " for $"
-                                            + total
-                            );
-
-                            p.closeInventory();
-                        }
-                );
+                        p.closeInventory();
+                    });
+        }
     }
-}
-```
-
 }
