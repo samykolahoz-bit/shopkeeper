@@ -423,25 +423,20 @@ private class PurchaseHandler implements Listener {
                                                     purchaseQty,
                                                     total
                                             )
-                                    );
+                                    );                        p.sendMessage(
+                                ChatColor.GREEN
+                                        + "[Shop] You purchased "
+                                        + purchaseQty
+                                        + "x "
+                                        + ItemUtil.getDisplayName(
+                                                item.getItem()
+                                        )
+                                        + " for $"
+                                        + total
+                        );
 
-                            p.sendMessage(
-                                    ChatColor.GREEN
-                                            + "[Shop] You purchased "
-                                            + purchaseQty
-                                            + "x "
-                                            + ItemUtil.getDisplayName(
-                                                    item.getItem()
-                                            )
-                                            + " for $"
-                                            + total
-                            );
-
-                            p.closeInventory();
-                        }
-                );
+                        p.closeInventory();
+                    });
+        }
     }
-}
-```
-
 }
