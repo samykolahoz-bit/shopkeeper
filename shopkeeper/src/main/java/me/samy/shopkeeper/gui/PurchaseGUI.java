@@ -42,6 +42,7 @@ public class PurchaseGUI {
         this.item = item;
         this.initialQty = Math.max(1, initialQty);
         this.qty = this.initialQty;
+
         build();
     }
 
@@ -53,6 +54,11 @@ public class PurchaseGUI {
                 ChatColor.GRAY
                         + "Purchase: "
                         + ItemUtil.getDisplayName(item.getItem())
+        );
+
+        inv.setItem(
+                0,
+                item.getItem().clone()
         );
 
         inv.setItem(
@@ -112,11 +118,6 @@ public class PurchaseGUI {
                         ChatColor.GREEN + "+16"
                 )
         );
-
-        inv.setItem(
-                0,
-                item.getItem().clone()
-        );
     }
 
     public void open(Player p) {
@@ -166,7 +167,8 @@ public class PurchaseGUI {
             ItemStack clicked =
                     e.getCurrentItem();
 
-            if (clicked == null) {
+            if (clicked == null ||
+                    clicked.getType().isAir()) {
                 return;
             }
 
