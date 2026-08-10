@@ -112,8 +112,7 @@ private class SellHandler implements Listener {
 
         e.setCancelled(true);
 
-        if (!(e.getWhoClicked()
-                instanceof Player)) {
+        if (!(e.getWhoClicked() instanceof Player)) {
             return;
         }
 
