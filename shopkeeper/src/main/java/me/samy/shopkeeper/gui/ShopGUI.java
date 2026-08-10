@@ -217,20 +217,23 @@ private class InventoryClickHandler
             ).open(p);
 
             return;
-        }    if (!matched.isBuyEnabled()) {
+               }
 
-        p.sendMessage(
-                ChatColor.RED +
-                        "Buying disabled for this item."
-        );
+        if (!matched.isBuyEnabled()) {
 
-        return;
+            p.sendMessage(
+                    ChatColor.RED +
+                            "Buying disabled for this item."
+            );
+
+            return;
+        }
+
+               new PurchaseGUI(
+                plugin,
+                shop,
+                matched,
+                qty
+        ).open(p);
     }
-
-    new PurchaseGUI(
-            plugin,
-            shop,
-            matched,
-            qty
-    ).open(p);
 }
