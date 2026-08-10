@@ -2,7 +2,6 @@ package me.samy.shopkeeper.gui;
 
 import me.samy.shopkeeper.ShopKeeperPlugin;
 import me.samy.shopkeeper.economy.EconomyManager;
-import me.samy.shopkeeper.events.ShopPurchaseEvent;
 import me.samy.shopkeeper.shop.Shop;
 import me.samy.shopkeeper.shop.ShopItem;
 import me.samy.shopkeeper.util.ItemUtil;
@@ -169,6 +168,7 @@ public class PurchaseGUI {
 
             if (clicked == null ||
                     clicked.getType().isAir()) {
+
                 return;
             }
 
@@ -196,11 +196,13 @@ public class PurchaseGUI {
             } else if (name.contains("+1")) {
 
                 qty = qty + 1;
+
                 rebuild();
 
             } else if (name.contains("+16")) {
 
                 qty = qty + 16;
+
                 rebuild();
 
             } else if (name.contains("MAX")) {
@@ -410,18 +412,6 @@ public class PurchaseGUI {
                                                     shop
                                             );
                                 }
-
-                                plugin.getServer()
-                                        .getPluginManager()
-                                        .callEvent(
-                                                new ShopPurchaseEvent(
-                                                        p,
-                                                        shop,
-                                                        item,
-                                                        purchaseQty,
-                                                        total
-                                                )
-                                        );
 
                                 p.sendMessage(
                                         ChatColor.GREEN
