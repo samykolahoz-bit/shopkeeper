@@ -24,6 +24,7 @@ public class SellGUI {
 private final Shop shop;
 private final ShopItem item;
 private final ShopKeeperPlugin plugin;
+
 private Inventory inv;
 
 public SellGUI(
@@ -319,7 +320,7 @@ private class SellHandler implements Listener {
                             EconomyManager eco =
                                     plugin.getEconomyManager();
 
-                            if (!eco.isEnabled()) {
+                                                                                   if (!eco.isEnabled()) {
 
                                 p.sendMessage(
                                         ChatColor.RED
@@ -335,7 +336,7 @@ private class SellHandler implements Listener {
                                             total
                                     );
 
-                            if (item.getStock() >= 0) {
+                                                                                    if (item.getStock() >= 0) {
 
                                 item.setStock(
                                         item.getStock()
@@ -346,20 +347,22 @@ private class SellHandler implements Listener {
                                         .saveShopAsync(
                                                 shop
                                         );
-                            }                        p.sendMessage(
-                                ChatColor.GREEN
-                                        + "[Shop] You sold "
-                                        + finalRemoved
-                                        + "x "
-                                        + ItemUtil.getDisplayName(
-                                                item.getItem()
-                                        )
-                                        + " for $"
-                                        + total
-                        );
+                            }
 
-                        p.closeInventory();
-                    });
-        }
+                            p.sendMessage(
+                                    ChatColor.GREEN
+                                            + "[Shop] You sold "
+                                            + finalRemoved
+                                            + "x "
+                                            + ItemUtil.getDisplayName(
+                                                    item.getItem()
+                                            )
+                                            + " for $"
+                                            + total
+                            );
+
+                            p.closeInventory();
+                        }
+                );
     }
 }
