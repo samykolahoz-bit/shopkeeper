@@ -22,11 +22,11 @@ jobs:
           cache: maven
 
       - name: Build Plugin
-        working-directory: shopkeeper
+        working-directory: ShopKeeperPlugin
         run: mvn -B clean package
 
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: ShopKeeper
-          path: shopkeeper/target/*.jar
+          path: ShopKeeperPlugin/target/*.jar
