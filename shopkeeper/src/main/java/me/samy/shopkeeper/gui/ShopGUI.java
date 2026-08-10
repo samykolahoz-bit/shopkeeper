@@ -181,6 +181,12 @@ private class InventoryClickHandler
         ClickType clickType =
                 e.getClick();
 
+        if (clickType ==
+                ClickType.NUMBER_KEY) {
+
+            return;
+        }
+
         int qty = 1;
 
         if (clickType ==
@@ -189,12 +195,6 @@ private class InventoryClickHandler
                 ClickType.SHIFT_RIGHT) {
 
             qty = 16;
-        }
-
-        if (clickType ==
-                ClickType.NUMBER_KEY) {
-
-            return;
         }
 
         if (clickType ==
@@ -219,30 +219,22 @@ private class InventoryClickHandler
             return;
         }
 
-        if (clickType ==
-                ClickType.LEFT ||
-            clickType ==
-                ClickType.SHIFT_LEFT ||
-            clickType ==
-                ClickType.SHIFT_RIGHT) {
+        if (!matched.isBuyEnabled()) {
 
-            if (!matched.isBuyEnabled()) {
+            p.sendMessage(
+                    ChatColor.RED +
+                            "Buying disabled for this item."
+            );
 
-                p.sendMessage(
-                        ChatColor.RED +
-                                "Buying disabled for this item."
-                );
-
-                return;
-            }
-
-            new PurchaseGUI(
-                    plugin,
-                    shop,
-                    matched,
-                    qty
-            ).open(p);
+            return;
         }
+
+        new PurchaseGUI(
+                plugin,
+                shop,
+                matched,
+                qty
+        ).open(p);
     }
 }
 ```
