@@ -1,0 +1,27 @@
+shop:
+  id: weapons
+  name: "&cWeapons Shop"
+  mob: VILLAGER
+  display-name: "&c⚔ Weapons Dealer"
+  location:
+    world: world
+    x: 100.5
+    y: 65
+    z: -30.5
+    yaw: 90
+    pitch: 0
+settings:
+  invulnerable: true
+  prevent-movement: true
+  prevent-despawn: true
+  prevent-push: true
+  prevent-attack: true
+gui:
+  title: "&8⚔ Weapons Shop"
+  rows: 6
+items:
+  diamond_sword:
+    item: "" # replace with serialized item after adding via /shopkeeper additem
+    buy-price: 5000
+    sell-price: 2500
+    stock: 50

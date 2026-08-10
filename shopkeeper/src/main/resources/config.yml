@@ -1,0 +1,18 @@
+# ShopKeeper config
+database:
+  enabled: true
+  type: sqlite
+
+defaults:
+  gui:
+    rows: 6
+    title: "&8Shop"
+
+economy:
+  enabled: true
+  use-vault: true
+
+sounds:
+  purchase: ENTITY_PLAYER_LEVELUP
+  sell: ENTITY_VILLAGER_YES
+  error: ENTITY_VILLAGER_NO

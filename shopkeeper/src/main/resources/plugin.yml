@@ -1,0 +1,29 @@
+name: ShopKeeper
+version: 1.0.0
+main: me.samy.shopkeeper.ShopKeeperPlugin
+api-version: "1.21"
+author: samykolahoz
+description: ShopKeeper - entity-based shop plugin with Vault economy support.
+commands:
+  shopkeeper:
+    description: Main ShopKeeper command
+    aliases: [shop, shops, sk]
+    usage: /<command> <sub>
+permissions:
+  shopkeeper.admin:
+    default: op
+  shopkeeper.create:
+    default: op
+  shopkeeper.delete:
+    default: op
+  shopkeeper.edit:
+    default: op
+  shopkeeper.reload:
+    default: op
+  shopkeeper.use:
+    default: true
+  shopkeeper.buy:
+    default: true
+  shopkeeper.sell:
+    default: true
+softdepend: [Vault, PlaceholderAPI]

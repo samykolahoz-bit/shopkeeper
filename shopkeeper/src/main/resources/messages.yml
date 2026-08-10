@@ -1,0 +1,7 @@
+no-money: "&cYou don't have enough money."
+purchased: "&aPurchase successful!"
+sold: "&aSale successful!"
+inventory-full: "&cYour inventory is full."
+shop-created: "&aShop created successfully!"
+shop-deleted: "&cShop deleted."
+shop-not-found: "&cShop not found."
