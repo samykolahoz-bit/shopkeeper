@@ -6,6 +6,7 @@ import me.samy.shopkeeper.events.ShopPurchaseEvent;
 import me.samy.shopkeeper.shop.Shop;
 import me.samy.shopkeeper.shop.ShopItem;
 import me.samy.shopkeeper.util.ItemUtil;
+
 import net.milkbowl.vault.economy.EconomyResponse;
 
 import org.bukkit.Bukkit;
@@ -46,10 +47,12 @@ public PurchaseGUI(
 }
 
 private void build() {
+
     inv = Bukkit.createInventory(
             null,
             9,
-            ChatColor.GRAY + "Purchase: "
+            ChatColor.GRAY
+                    + "Purchase: "
                     + ItemUtil.getDisplayName(item.getItem())
     );
 
@@ -73,7 +76,9 @@ private void build() {
             3,
             ItemUtil.makeControlItem(
                     Material.PAPER,
-                    ChatColor.GOLD + "Quantity: " + qty
+                    ChatColor.GOLD
+                            + "Quantity: "
+                            + qty
             )
     );
 
@@ -109,10 +114,14 @@ private void build() {
             )
     );
 
-    inv.setItem(0, item.getItem().clone());
+    inv.setItem(
+            0,
+            item.getItem().clone()
+    );
 }
 
 public void open(Player p) {
+
     p.openInventory(inv);
 
     p.getServer()
@@ -126,7 +135,10 @@ public void open(Player p) {
 private class PurchaseHandler implements Listener {
 
     @EventHandler
-    public void onInventoryClose(InventoryCloseEvent e) {
+    public void onInventoryClose(
+            InventoryCloseEvent e
+    ) {
+
         if (e.getInventory() != inv) {
             return;
         }
@@ -135,91 +147,127 @@ private class PurchaseHandler implements Listener {
     }
 
     @EventHandler
-    public void onClick(InventoryClickEvent e) {
+    public void onClick(
+            InventoryClickEvent e
+    ) {
+
         if (e.getInventory() != inv) {
             return;
         }
 
         e.setCancelled(true);
 
-        if (!(e.getWhoClicked() instanceof Player)) {
+        if (!(e.getWhoClicked()
+                instanceof Player)) {
+
             return;
         }
 
-        Player p = (Player) e.getWhoClicked();
-        ItemStack clicked = e.getCurrentItem();
+        Player p =
+                (Player) e.getWhoClicked();
+
+        ItemStack clicked =
+                e.getCurrentItem();
 
         if (clicked == null) {
             return;
         }
 
-        String name = ItemUtil.getDisplayName(clicked);
+        String name =
+                ItemUtil.getDisplayName(clicked);
 
         if (name.contains("-16")) {
-            qty = Math.max(1, qty - 16);
+
+            qty = Math.max(
+                    1,
+                    qty - 16
+            );
+
             rebuild();
 
         } else if (name.contains("-1")) {
-            qty = Math.max(1, qty - 1);
+
+            qty = Math.max(
+                    1,
+                    qty - 1
+            );
+
             rebuild();
 
         } else if (name.contains("+1")) {
+
             qty = qty + 1;
             rebuild();
 
         } else if (name.contains("+16")) {
+
             qty = qty + 16;
             rebuild();
 
         } else if (name.contains("MAX")) {
+
             qty = item.getMaxPurchase() > 0
                     ? item.getMaxPurchase()
                     : 64;
+
             rebuild();
 
         } else if (name.contains("Buy")) {
+
             attemptPurchase(p);
 
         } else if (name.contains("Cancel")) {
+
             p.closeInventory();
         }
     }
 
     private void rebuild() {
+
         inv.setItem(
                 3,
                 ItemUtil.makeControlItem(
                         Material.PAPER,
-                        ChatColor.GOLD + "Quantity: " + qty
+                        ChatColor.GOLD
+                                + "Quantity: "
+                                + qty
                 )
         );
     }
 
     private void attemptPurchase(Player p) {
 
-        if (!plugin.getEconomyManager().isEnabled()) {
+        if (!plugin.getEconomyManager()
+                .isEnabled()) {
+
             p.sendMessage(
-                    ChatColor.RED +
-                            "Economy not available."
+                    ChatColor.RED
+                            + "Economy not available."
             );
+
             return;
         }
 
         if (item.getBuyPrice() < 0) {
+
             p.sendMessage(
-                    ChatColor.RED +
-                            "Item has no buy price."
+                    ChatColor.RED
+                            + "Item has no buy price."
             );
+
             return;
         }
 
         if (item.getPermission() != null
-                && !p.hasPermission(item.getPermission())) {
+                && !p.hasPermission(
+                        item.getPermission()
+                )) {
 
             p.sendMessage(
-                    ChatColor.RED +
-                            "You don't have permission to buy this."
+                    ChatColor.RED
+                            + "You don't have permission to buy this."
             );
+
             return;
         }
 
@@ -227,9 +275,10 @@ private class PurchaseHandler implements Listener {
                 && qty > item.getMaxPurchase()) {
 
             p.sendMessage(
-                    ChatColor.RED +
-                            "Purchase limit exceeded."
+                    ChatColor.RED
+                            + "Purchase limit exceeded."
             );
+
             return;
         }
 
@@ -237,134 +286,160 @@ private class PurchaseHandler implements Listener {
                 && qty > item.getStock()) {
 
             p.sendMessage(
-                    ChatColor.RED +
-                            "Not enough stock."
+                    ChatColor.RED
+                            + "Not enough stock."
             );
+
             return;
         }
 
-        final int purchaseQty = qty;
+        final int purchaseQty =
+                qty;
+
         final double total =
-                item.getBuyPrice() * purchaseQty;
+                item.getBuyPrice()
+                        * purchaseQty;
 
         EconomyManager eco =
                 plugin.getEconomyManager();
 
         double balance =
-                eco.getEconomy().getBalance(p);
+                eco.getEconomy()
+                        .getBalance(p);
 
         if (balance < total) {
+
             p.sendMessage(
-                    ChatColor.RED +
-                            "You don't have enough money."
+                    ChatColor.RED
+                            + "You don't have enough money."
             );
+
             return;
         }
 
         int maxStack =
-                item.getItem().getMaxStackSize();
+                item.getItem()
+                        .getMaxStackSize();
 
         int requiredStacks =
                 (int) Math.ceil(
-                        (double) purchaseQty / maxStack
+                        (double) purchaseQty
+                                / maxStack
                 );
 
         int emptySlots = 0;
 
         for (ItemStack stack :
-                p.getInventory().getStorageContents()) {
+                p.getInventory()
+                        .getStorageContents()) {
 
-            if (stack == null || stack.getType().isAir()) {
+            if (stack == null
+                    || stack.getType().isAir()) {
+
                 emptySlots++;
             }
         }
 
         if (emptySlots < requiredStacks) {
+
             p.sendMessage(
-                    ChatColor.RED +
-                            "Your inventory is full."
+                    ChatColor.RED
+                            + "Your inventory is full."
             );
+
             return;
         }
 
         plugin.getServer()
                 .getScheduler()
-                .runTask(plugin, () -> {
+                .runTask(
+                        plugin,
+                        () -> {
 
-                    EconomyResponse response =
-                            eco.getEconomy()
-                                    .withdrawPlayer(
-                                            p,
-                                            total
-                                    );
+                            EconomyResponse response =
+                                    eco.getEconomy()
+                                            .withdrawPlayer(
+                                                    p,
+                                                    total
+                                            );
 
-                    if (!response.transactionSuccess()) {
-                        p.sendMessage(
-                                ChatColor.RED +
-                                        "Transaction failed: " +
-                                        response.errorMessage
-                        );
-                        return;
-                    }
+                            if (!response
+                                    .transactionSuccess()) {
 
-                    int remaining = purchaseQty;
-
-                    while (remaining > 0) {
-
-                        ItemStack toGive =
-                                item.getItem().clone();
-
-                        int give =
-                                Math.min(
-                                        toGive.getMaxStackSize(),
-                                        remaining
+                                p.sendMessage(
+                                        ChatColor.RED
+                                                + "Transaction failed: "
+                                                + response.errorMessage
                                 );
 
-                        toGive.setAmount(give);
+                                return;
+                            }
 
-                        p.getInventory()
-                                .addItem(toGive);
+                            int remaining =
+                                    purchaseQty;
 
-                        remaining -= give;
-                    }
+                            while (remaining > 0) {
 
-                    if (item.getStock() >= 0) {
+                                ItemStack toGive =
+                                        item.getItem()
+                                                .clone();
 
-                        item.setStock(
-                                item.getStock() -
-                                        purchaseQty
-                        );
+                                int give =
+                                        Math.min(
+                                                toGive.getMaxStackSize(),
+                                                remaining
+                                        );
 
-                        plugin.getShopManager()
-                                .saveShopAsync(shop);
-                    }
+                                toGive.setAmount(give);
 
-                    plugin.getServer()
-                            .getPluginManager()
-                            .callEvent(
-                                    new ShopPurchaseEvent(
-                                            p,
-                                            shop,
-                                            item,
-                                            purchaseQty,
-                                            total
-                                    )
+                                p.getInventory()
+                                        .addItem(
+                                                toGive
+                                        );
+
+                                remaining -= give;
+                            }
+
+                            if (item.getStock() >= 0) {
+
+                                item.setStock(
+                                        item.getStock()
+                                                - purchaseQty
+                                );
+
+                                plugin.getShopManager()
+                                        .saveShopAsync(
+                                                shop
+                                        );
+                            }
+
+                            plugin.getServer()
+                                    .getPluginManager()
+                                    .callEvent(
+                                            new ShopPurchaseEvent(
+                                                    p,
+                                                    shop,
+                                                    item,
+                                                    purchaseQty,
+                                                    total
+                                            )
+                                    );
+
+                            p.sendMessage(
+                                    ChatColor.GREEN
+                                            + "[Shop] You purchased "
+                                            + purchaseQty
+                                            + "x "
+                                            + ItemUtil.getDisplayName(
+                                                    item.getItem()
+                                            )
+                                            + " for $"
+                                            + total
                             );
 
-                    p.sendMessage(
-                            ChatColor.GREEN +
-                                    "[Shop] You purchased " +
-                                    purchaseQty +
-                                    "x " +
-                                    ItemUtil.getDisplayName(
-                                            item.getItem()
-                                    ) +
-                                    " for $" +
-                                    total
-                    );
-
-                    p.closeInventory();
-                });
+                            p.closeInventory();
+                        }
+                );
     }
 }
 ```
