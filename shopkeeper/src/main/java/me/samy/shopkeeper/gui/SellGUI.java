@@ -1,3 +1,4 @@
+```java
 package me.samy.shopkeeper.gui;
 
 import me.samy.shopkeeper.ShopKeeperPlugin;
@@ -5,14 +6,21 @@ import me.samy.shopkeeper.economy.EconomyManager;
 import me.samy.shopkeeper.shop.Shop;
 import me.samy.shopkeeper.shop.ShopItem;
 import me.samy.shopkeeper.util.ItemUtil;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class SellGUI {
+
     private final Shop shop;
     private final ShopItem item;
     private final ShopKeeperPlugin plugin;
@@ -26,108 +34,236 @@ public class SellGUI {
     }
 
     private void build() {
-        inv = Bukkit.createInventory(null, 9, ChatColor.GRAY + "Sell: " + ItemUtil.getDisplayName(item.getItem()));
-        inv.setItem(3, ItemUtil.makeControlItem(org.bukkit.Material.PAPER, ChatColor.GOLD + "Sell All matching"));
-        inv.setItem(4, ItemUtil.makeControlItem(org.bukkit.Material.EMERALD, ChatColor.GREEN + "Sell"));
-        inv.setItem(5, ItemUtil.makeControlItem(org.bukkit.Material.BARRIER, ChatColor.RED + "Cancel"));
+        inv = Bukkit.createInventory(
+                null,
+                9,
+                ChatColor.GRAY + "Sell: " + ItemUtil.getDisplayName(item.getItem())
+        );
+
+        inv.setItem(
+                3,
+                ItemUtil.makeControlItem(
+                        Material.PAPER,
+                        ChatColor.GOLD + "Sell All matching"
+                )
+        );
+
+        inv.setItem(
+                4,
+                ItemUtil.makeControlItem(
+                        Material.EMERALD,
+                        ChatColor.GREEN + "Sell"
+                )
+        );
+
+        inv.setItem(
+                5,
+                ItemUtil.makeControlItem(
+                        Material.BARRIER,
+                        ChatColor.RED + "Cancel"
+                )
+        );
     }
 
     public void open(Player p) {
         p.openInventory(inv);
-        p.getServer().getPluginManager().registerEvents(new SellHandler(), plugin);
+
+        p.getServer()
+                .getPluginManager()
+                .registerEvents(new SellHandler(), plugin);
     }
 
-    private class SellHandler implements org.bukkit.event.Listener {
+    private class SellHandler implements Listener {
+
         @EventHandler
         public void onInventoryClose(InventoryCloseEvent e) {
-            if (e.getInventory() != inv) return;
-            org.bukkit.event.HandlerList.unregisterAll(this);
+            if (e.getInventory() != inv) {
+                return;
+            }
+
+            HandlerList.unregisterAll(this);
         }
 
         @EventHandler
         public void onClick(InventoryClickEvent e) {
-            if (e.getInventory() != inv) return;
+            if (e.getInventory() != inv) {
+                return;
+            }
+
             e.setCancelled(true);
-            if (!(e.getWhoClicked() instanceof Player)) return;
+
+            if (!(e.getWhoClicked() instanceof Player)) {
+                return;
+            }
+
             Player p = (Player) e.getWhoClicked();
             ItemStack clicked = e.getCurrentItem();
-            if (clicked == null) return;
+
+            if (clicked == null) {
+                return;
+            }
+
             String name = ItemUtil.getDisplayName(clicked);
-            if (name.contains("Sell")) {
+
+            if (name.contains("Sell All")) {
+                attemptSellAll(p);
+            } else if (name.contains("Sell")) {
                 attemptSell(p);
             } else if (name.contains("Cancel")) {
                 p.closeInventory();
-            } else if (name.contains("Sell All")) {
-                attemptSellAll(p);
             }
         }
 
         private void attemptSellAll(Player p) {
             int count = 0;
+
             for (ItemStack is : p.getInventory().getContents()) {
-                if (is == null) continue;
+
+                if (is == null) {
+                    continue;
+                }
+
                 if (ItemUtil.isSimilar(is, item.getItem())) {
                     count += is.getAmount();
                 }
             }
+
             if (count <= 0) {
-                p.sendMessage(ChatColor.RED + "You have none of that item.");
+                p.sendMessage(
+                        ChatColor.RED + "You have none of that item."
+                );
                 return;
             }
+
             performSell(p, count);
         }
 
         private void attemptSell(Player p) {
-            // Attempt to sell single stack matching the item in player's hand
-            ItemStack hand = p.getInventory().getItemInMainHand();
+
+            ItemStack hand =
+                    p.getInventory().getItemInMainHand();
+
             if (hand == null || hand.getType().isAir()) {
-                p.sendMessage(ChatColor.RED + "Hold the item to sell in your hand.");
+                p.sendMessage(
+                        ChatColor.RED +
+                        "Hold the item to sell in your hand."
+                );
                 return;
             }
+
             if (!ItemUtil.isSimilar(hand, item.getItem())) {
-                p.sendMessage(ChatColor.RED + "Item in hand does not match the shop item.");
+                p.sendMessage(
+                        ChatColor.RED +
+                        "Item in hand does not match the shop item."
+                );
                 return;
             }
+
             performSell(p, hand.getAmount());
         }
 
         private void performSell(Player p, int amount) {
+
             if (!plugin.getEconomyManager().isEnabled()) {
-                p.sendMessage(ChatColor.RED + "Economy not available.");
+                p.sendMessage(
+                        ChatColor.RED +
+                        "Economy not available."
+                );
                 return;
             }
+
             if (item.getSellPrice() < 0) {
-                p.sendMessage(ChatColor.RED + "Item has no sell price.");
+                p.sendMessage(
+                        ChatColor.RED +
+                        "Item has no sell price."
+                );
                 return;
             }
-            double total = item.getSellPrice() * amount;
-            // remove items safely
+
+            double total =
+                    item.getSellPrice() * amount;
+
             int removed = 0;
-            for (int i = 0; i < p.getInventory().getSize(); i++) {
-                ItemStack is = p.getInventory().getItem(i);
-                if (is == null) continue;
+
+            for (int i = 0;
+                 i < p.getInventory().getSize();
+                 i++) {
+
+                ItemStack is =
+                        p.getInventory().getItem(i);
+
+                if (is == null) {
+                    continue;
+                }
+
                 if (ItemUtil.isSimilar(is, item.getItem())) {
-                    int take = Math.min(is.getAmount(), amount - removed);
-                    is.setAmount(is.getAmount() - take);
-                    if (is.getAmount() <= 0) p.getInventory().setItem(i, null);
+
+                    int take = Math.min(
+                            is.getAmount(),
+                            amount - removed
+                    );
+
+                    is.setAmount(
+                            is.getAmount() - take
+                    );
+
+                    if (is.getAmount() <= 0) {
+                        p.getInventory().setItem(i, null);
+                    }
+
                     removed += take;
-                    if (removed >= amount) break;
+
+                    if (removed >= amount) {
+                        break;
+                    }
                 }
             }
+
             if (removed <= 0) {
-                p.sendMessage(ChatColor.RED + "You don't have that item.");
+                p.sendMessage(
+                        ChatColor.RED +
+                        "You don't have that item."
+                );
                 return;
             }
-            plugin.getServer().getScheduler().runTask(plugin, () -> {
-                EconomyManager eco = plugin.getEconomyManager();
-                eco.getEconomy().depositPlayer(p, total);
-                if (item.getStock() >= 0) {
-                    item.setStock(item.getStock() + removed);
-                    plugin.getShopManager().saveShopAsync(shop);
-                }
-                p.sendMessage(ChatColor.GREEN + "[Shop] You sold " + removed + "x " + ItemUtil.getDisplayName(item.getItem()) + " for $" + total);
-                p.closeInventory();
-            });
+
+            final int finalRemoved = removed;
+
+            plugin.getServer()
+                    .getScheduler()
+                    .runTask(plugin, () -> {
+
+                        EconomyManager eco =
+                                plugin.getEconomyManager();
+
+                        eco.getEconomy()
+                                .depositPlayer(p, total);
+
+                        if (item.getStock() >= 0) {
+
+                            item.setStock(
+                                    item.getStock() + finalRemoved
+                            );
+
+                            plugin.getShopManager()
+                                    .saveShopAsync(shop);
+                        }
+
+                        p.sendMessage(
+                                ChatColor.GREEN +
+                                "[Shop] You sold " +
+                                finalRemoved +
+                                "x " +
+                                ItemUtil.getDisplayName(
+                                        item.getItem()
+                                ) +
+                                " for $" +
+                                total
+                        );
+
+                        p.closeInventory();
+                    });
         }
     }
 }
+```
